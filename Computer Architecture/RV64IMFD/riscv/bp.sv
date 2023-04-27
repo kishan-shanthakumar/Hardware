@@ -1,9 +1,8 @@
 module bp( input logic [31:0] addr,
-            input logic train,
-            output logic valid,
+            output logic hit, taken
             output logic [31:0] paddr,
+            input logic mispred,
             input logic [31:0] t_addr,
-            input logic [31:0] t_paddr,
             input clk, rst
 );
 
@@ -16,6 +15,7 @@ typedef struct {
     logic [31:0] address;
     logic [31:0] pred_address;
     logic [1:0] counter;
+    logic [1:0] prev_counter;
     logic valid;
     logic match;
 } btb_ele;
@@ -27,25 +27,30 @@ logic [2047:0] validn;
 // Prediction phase
 always_comb
 begin
-    for(integer i = 0; i < 2048; i++)
+    hit = 0;
+    validn = 0;
+    if (!mispred)
     begin
-        validn[i] = btb[i].valid;
+        for(integer i = 0; i < 2048; i++)
+        begin
+            validn[i] = btb[i].valid;
+            hit |= btb[i].valid;
+        end
     end
 end
 
 always_comb
 begin
-    valid = 0;
     for(integer i = 0; i < 2048; i++)
     begin
-        valid |= btb[i].valid;
         btb[i].valid = btb[i].address == addr;
     end
 end
 
-assign paddr = (enc_valid == 1) ? btb[index].pred_address : 'z;
+assign paddr = btb[index].pred_address;
+assign taken = (counter > 1) ? 1 : 0;
 
-//Training phase
+//misprediction phase
 always_comb
 begin 
     present = 0;
@@ -68,11 +73,12 @@ begin
             btb[i].address <= 32'b0;
             btb[i].pred_address <= 32'b0;
             btb[i].counter <= 2'b0;
+            btb[i].prev_counter <= 2'b0;
         end
     end
     else
     begin
-        if(train)
+        if(mispred)
         begin
             if (present)
             begin
@@ -80,9 +86,22 @@ begin
                 begin
                     if (btb[i].match)
                     begin
-                        if (btb[i].counter != 0)
+                        btb[i].prev_counter <= btb[i].counter;
+                        if (btb[i].prev_counter == 0)
                         begin
-                            btb[i].counter <= btb[i].counter - 1;
+                            btb[i].counter <= 1;
+                        end
+                        else if (btb[i].prev_counter == 1)
+                        begin
+                            btb[i].counter <= 2;
+                        end
+                        else if (btb[i].prev_counter == 2)
+                        begin
+                            btb[i].counter <= 1;
+                        end
+                        else
+                        begin
+                            btb[i].counter <= 2;
                         end
                     end
                 end
@@ -91,6 +110,35 @@ begin
             begin
                 // Inserting new addresses
                 // Potential replacement for existing addresses
+            end
+        end
+        else
+        begin
+            if (hit)
+            begin
+                for(integer i = 0; i < 2048; i++)
+                begin
+                    if (btb[i].valid)
+                    begin
+                        btb[i].prev_counter <= btb[i].counter;
+                        if (btb[i].counter == 0)
+                        begin
+                            btb[i].counter <= 0;
+                        end
+                        else if (btb[i].counter == 1)
+                        begin
+                            btb[i].counter <= 0;
+                        end
+                        else if (btb[i].prev_counter == 2)
+                        begin
+                            btb[i].counter <= 3;
+                        end
+                        else
+                        begin
+                            btb[i].counter <= 3;
+                        end
+                    end
+                end
             end
         end
     end
