@@ -1,6 +1,6 @@
-module regfile (input [4:0] r1_addr, r2_addr, w1_addr,
+module regfile (input [4:0] r1_addr, r2_addr, r3_addr, w1_addr,
                 input [31:0] inp_data,
-                output [31:0] r1_data, r2_data,
+                output [31:0] r1_data, r2_data, r3_addr,
                 input clk, rst, write);
 
 logic [31:0] base_reg [0:31];
@@ -9,6 +9,7 @@ always_comb
 begin
     r1_data = base_reg[r1_addr];
     r2_data = base_reg[r2_addr];
+    r3_data = base_reg[r3_addr];
 end
 
 always_ff @(posedge clk, negedge rst)
