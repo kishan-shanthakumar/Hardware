@@ -4,14 +4,14 @@
 
 module stage1 (input logic [31:0] instr_i, r_addr, t_addr, tp_addr,
             input logic clk, rst, mispred,
-            output logic [31:0] addr, instr_o);
+            output logic [31:0] addr);
 
 logic hit, taken;
 logic [31:0] paddr;
 
 bp u1(.*);
 
-always_ff @(posedge clk. negedge rst)
+always_ff @(posedge clk, negedge rst)
 begin
     if(!rst)
         addr <= 0;

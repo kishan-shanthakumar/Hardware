@@ -1,5 +1,5 @@
 module bp( input logic [31:0] addr,
-            output logic hit, taken
+            output logic hit, taken,
             output logic [31:0] paddr,
             input logic mispred,
             input logic [31:0] t_addr,
@@ -7,11 +7,11 @@ module bp( input logic [31:0] addr,
             input clk, rst
 );
 
-logic [10:0] index_free;
+logic [10:0] index_free, index;
 logic enc_valid, gfree;
 
 enc_n #(11) u1(index, enc_valid, validn);
-enc_n #(11) u1(index_free, gfree, freen);
+enc_n #(11) u2(index_free, gfree, freen);
 
 typedef struct {
     logic [31:0] address;
@@ -33,6 +33,7 @@ always_comb
 begin
     hit = 0;
     validn = 0;
+    freen = 0;
     if (!mispred)
     begin
         for(integer i = 0; i < 2048; i++)
@@ -53,7 +54,7 @@ begin
 end
 
 assign paddr = btb[index].pred_address;
-assign taken = (counter > 1) ? 1 : 0;
+assign taken = (btb[index].counter > 1) ? 1 : 0;
 
 //misprediction phase
 always_comb
