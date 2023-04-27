@@ -1,4 +1,5 @@
-module bp( input logic [31:0] addr,
+module bp #(parameter N)
+            (input logic [31:0] addr,
             output logic hit, taken,
             output logic [31:0] paddr,
             input logic mispred,
@@ -7,11 +8,15 @@ module bp( input logic [31:0] addr,
             input clk, rst
 );
 
-logic [10:0] index_free, index;
+logic [N-1:0] index_free, index;
 logic enc_valid, gfree;
+genvar i, j;
+logic present;
+logic [((2**N)-1):0] validn;
+logic [((2**N)-1):0] freen;
 
-enc_n #(11) u1(index, enc_valid, validn);
-enc_n #(11) u2(index_free, gfree, freen);
+enc_n #(N) u1(index, enc_valid, validn);
+enc_n #(N) u2(index_free, gfree, freen);
 
 typedef struct {
     logic [31:0] address;
@@ -23,58 +28,45 @@ typedef struct {
     logic free;
 } btb_ele;
 
-btb_ele btb [2047:0];
-logic present;
-logic [2047:0] validn;
-logic [2047:0] freen;
+btb_ele btb [((2**N)-1):0];
 
 // Prediction phase
-always_comb
-begin
-    hit = 0;
-    validn = 0;
-    freen = 0;
-    if (!mispred)
-    begin
-        for(integer i = 0; i < 2048; i++)
-        begin
-            validn[i] = btb[i].valid;
-            hit |= btb[i].valid;
-            freen[i] = btb[i].free;
-        end
-    end
+generate
+for(j = 0; j < 2**N; j++)
+begin : predictor
+    assign validn[j] = btb[j].valid;
+    assign freen[j] = btb[j].free;
+    assign btb[j].valid = (btb[j].address == addr) ? 1 : 0;
 end
-
-always_comb
-begin
-    for(integer i = 0; i < 2048; i++)
-    begin
-        btb[i].valid = btb[i].address == addr;
-    end
-end
+endgenerate
 
 assign paddr = btb[index].pred_address;
 assign taken = (btb[index].counter > 1) ? 1 : 0;
+assign hit = |validn;
 
 //misprediction phase
 always_comb
 begin 
     present = 0;
-    for (integer i = 0; i < 2048; i = i + 1)
+    for (integer k = 0; k < 2**N; k = k + 1)
     begin
-        present |= btb[i].match;
-    end
-    for(integer i = 0; i < 2048; i++)
-    begin
-        btb[i].match = btb[i].address == t_addr;
+        present |= btb[k].match;
     end
 end
 
-always_ff @(posedge clk, negedge rst)
-begin
-    if (!rst)
+generate
+for(j = 0; j < 2**N; j++)
+begin : matcher
+    assign btb[j].match = (btb[j].address == t_addr) ? 1 : 0;
+end
+endgenerate
+
+generate
+for(i = 0; i < 2**N; i++)
+begin : training
+    always_ff @(posedge clk, negedge rst)
     begin
-        for(integer i = 0; i < 2048; i++)
+        if (!rst)
         begin
             btb[i].address <= 32'b0;
             btb[i].pred_address <= 32'b0;
@@ -82,18 +74,14 @@ begin
             btb[i].prev_counter <= 2'b0;
             btb[i].free <= 1'b0;
         end
-    end
-    else
-    begin
-        if(mispred)
+        else
         begin
-            if (present)
+            if (mispred)
             begin
-                for(integer i = 0; i < 2048; i++)
+                if (present)
                 begin
-                    if (btb[i].match)
+                    if (btb[i].match == 1)
                     begin
-                        btb[i].prev_counter <= btb[i].counter;
                         if (btb[i].prev_counter == 0)
                         begin
                             btb[i].counter <= 1;
@@ -112,24 +100,24 @@ begin
                         end
                     end
                 end
+                else
+                begin
+                    if (gfree == 1)
+                    begin
+                        if (i == index_free)
+                        begin
+                            btb[i].address <= t_addr;
+                            btb[i].pred_address <= tp_addr;
+                            btb[i].free <= 0;
+                        end
+                    end
+                end
             end
             else
             begin
-                if (gfree)
+                if (hit == 1)
                 begin
-                    btb[index_free].address <= t_addr;
-                    btb[index_free].pred_address <= tp_addr;
-                    btb[index_free].free <= 0;
-                end
-            end
-        end
-        else
-        begin
-            if (hit)
-            begin
-                for(integer i = 0; i < 2048; i++)
-                begin
-                    if (btb[i].valid)
+                    if (btb[i].valid == 1)
                     begin
                         btb[i].prev_counter <= btb[i].counter;
                         if (btb[i].counter == 0)
@@ -154,5 +142,6 @@ begin
         end
     end
 end
+endgenerate
 
 endmodule
