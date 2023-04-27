@@ -6,10 +6,11 @@ module bp( input logic [31:0] addr,
             input clk, rst
 );
 
-logic [10:0] index;
-logic enc_valid;
+logic [10:0] index_free;
+logic enc_valid, gfree;
 
 enc_n #(11) u1(index, enc_valid, validn);
+enc_n #(11) u1(index_free, gfree, freen);
 
 typedef struct {
     logic [31:0] address;
@@ -18,11 +19,13 @@ typedef struct {
     logic [1:0] prev_counter;
     logic valid;
     logic match;
+    logic free;
 } btb_ele;
 
 btb_ele btb [2047:0];
 logic present;
 logic [2047:0] validn;
+logic [2047:0] freen;
 
 // Prediction phase
 always_comb
@@ -35,6 +38,7 @@ begin
         begin
             validn[i] = btb[i].valid;
             hit |= btb[i].valid;
+            freen[i] = btb[i].free;
         end
     end
 end
@@ -74,6 +78,7 @@ begin
             btb[i].pred_address <= 32'b0;
             btb[i].counter <= 2'b0;
             btb[i].prev_counter <= 2'b0;
+            btb[i].free <= 1'b0;
         end
     end
     else
@@ -106,11 +111,6 @@ begin
                     end
                 end
             end
-            else
-            begin
-                // Inserting new addresses
-                // Potential replacement for existing addresses
-            end
         end
         else
         begin
@@ -138,6 +138,15 @@ begin
                             btb[i].counter <= 3;
                         end
                     end
+                end
+            end
+            else
+            begin
+                if (gfree)
+                begin
+                    btb[index_free].address <= addr;
+                    // btb[index_free].pred_address <= ; ------TODO: add address calculation
+                    btb[index_free].free <= 0;
                 end
             end
         end
