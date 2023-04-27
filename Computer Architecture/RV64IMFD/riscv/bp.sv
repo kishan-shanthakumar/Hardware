@@ -3,6 +3,7 @@ module bp( input logic [31:0] addr,
             output logic [31:0] paddr,
             input logic mispred,
             input logic [31:0] t_addr,
+            input logic [31:0] tp_addr,
             input clk, rst
 );
 
@@ -111,6 +112,15 @@ begin
                     end
                 end
             end
+            else
+            begin
+                if (gfree)
+                begin
+                    btb[index_free].address <= t_addr;
+                    btb[index_free].pred_address <= tp_addr;
+                    btb[index_free].free <= 0;
+                end
+            end
         end
         else
         begin
@@ -138,15 +148,6 @@ begin
                             btb[i].counter <= 3;
                         end
                     end
-                end
-            end
-            else
-            begin
-                if (gfree)
-                begin
-                    btb[index_free].address <= addr;
-                    // btb[index_free].pred_address <= ; ------TODO: add address calculation
-                    btb[index_free].free <= 0;
                 end
             end
         end
