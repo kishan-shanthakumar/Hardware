@@ -1,6 +1,8 @@
 // Fence flush
 // BP for jump and branch
 // Send address and instruction to next stage
+// TODO: trap handling
+// TODO: interrupts
 
 module stage1 (input logic [31:0] t_addr, tp_addr,
             input logic clk, rst, mispred, ready,
