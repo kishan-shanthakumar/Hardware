@@ -1,3 +1,9 @@
+// EUs
+// Basic arithmetic and boolean for integer and floating
+// Multiply for integer and floating point
+// Divide for integer and floating point
+// Branch/Jump unit
+
 module stage2(input logic [31:0] instr,
             output [4:0] r1_addr, r2_addr, r3_addr, w1_addr,
             output [3:0] reg_control,
