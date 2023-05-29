@@ -1,0 +1,16 @@
+Extensions: RV64IMFD_Zifencei
+
+5 stage pipeline: Fetch, Decode, Execute, Memory, Writeback
+
+Fetch: Branch Predictor, Misprediction Flushes, interrupt Flushes
+Decode: Fence.i flushes(to prevent additonal stalls)
+Execute: Misprediction results
+
+Registers
+1. Integer Registers
+2. Floating Point Registers
+
+EUs
+1. Adder/Subtractor
+2. Multiplier/Divider
+3. Branch/Jump
