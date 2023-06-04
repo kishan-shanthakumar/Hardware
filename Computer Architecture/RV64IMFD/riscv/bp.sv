@@ -15,6 +15,7 @@ logic present;
 logic [((2**N)-1):0] validn;
 logic [((2**N)-1):0] freen;
 logic [((2**N)-1):0] match;
+logic [N-1:0] gcounter;
 
 typedef struct {
     logic [31:0] address;
@@ -38,7 +39,7 @@ end
 endgenerate
 
 enc_n #(N) u1(index, enc_valid, validn);
-enc_n #(N) u2(index_free, gfree, freen);
+assign index_free = gcounter;
 enc_n #(N) u3(index_match, present, match);
 
 assign paddr = btb[index].pred_address;
@@ -52,6 +53,24 @@ begin : matcher
     assign match[j] = (btb[j].address == t_addr) ? 1 : 0;
 end
 endgenerate
+
+always_ff @(posedge clk, negedge rst)
+begin
+    if (!rst)
+        gcounter <= 0;
+    else
+        if (mispred & gcounter != 2**N-1)
+            gcounter <= gcounter + 1;
+end
+
+always_ff @(posedge clk, negedge rst)
+begin
+    if (!rst)
+        gfree <= 1;
+    else
+        if (mispred & gcounter == 2**N-1)
+            gfree <= 0;
+end
 
 always_ff @(posedge clk, negedge rst)
 begin
