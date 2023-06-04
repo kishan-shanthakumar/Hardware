@@ -16,30 +16,30 @@ always_comb
 begin
     op_o = 0;
     case(select)
-        jal: begin
+        JAL: begin
             final_pc = addr + $signed(imm);
             op_o = addr + 4;
         end
-        jalr: begin
+        JALR: begin
             final_pc = {{op1 + $signed(imm)}>>0}<<0;
             op_o = addr + 4;
         end
-        beq: begin
+        BEQ: begin
             final_pc = (e == 1) ? final_pc + $signed(imm): final_pc + 4;
         end
-        bne: begin
+        BNE: begin
             final_pc = (e != 1) ? final_pc + $signed(imm): final_pc + 4;
         end
-        blt: begin
+        BLT: begin
             final_pc = (l == 1) ? final_pc + $signed(imm): final_pc + 4;
         end
-        bge: begin
+        BGE: begin
             final_pc = (g == 1) ? final_pc + $signed(imm): final_pc + 4;
         end
-        bltu: begin
+        BLTU: begin
             final_pc = (lu == 1) ? final_pc + $signed(imm): final_pc + 4;
         end
-        bgeu: begin
+        BGEU: begin
             final_pc = (gu == 1) ? final_pc + $signed(imm): final_pc + 4;
         end
     endcase
