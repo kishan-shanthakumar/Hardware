@@ -63,14 +63,7 @@ begin
             gcounter <= gcounter + 1;
 end
 
-always_ff @(posedge clk, negedge rst)
-begin
-    if (!rst)
-        gfree <= 1;
-    else
-        if (mispred & gcounter == 2**N-1)
-            gfree <= 0;
-end
+assign gfree = 1;
 
 always_ff @(posedge clk, negedge rst)
 begin
