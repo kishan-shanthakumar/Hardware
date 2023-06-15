@@ -1,6 +1,6 @@
 `include "instr_op.sv"
 
-module jumpbranch(input logic [31:0] op1, op2,
+module jumpbranch(input logic [63:0] op1, op2,
                 input logic [2:0] select,
                 input logic [31:0] addr,
                 input logic [20:0] imm,
