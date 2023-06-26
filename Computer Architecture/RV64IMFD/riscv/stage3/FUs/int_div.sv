@@ -4,10 +4,10 @@ function [63:0] add (input [63:0] inp1, input [63:0] inp2);
     add = cseladd_result;
 endfunction
 
-module int_mul(input logic clk, rst,
-                input logic [63:0] op1, op2,
+module int_div(input logic clk, rst,
+                input logic [63:0] inp1, inp2,
                 input logic start,
-                output logic ready, valid,
+                output logic ready,
                 output logic [63:0] int_div_quo, int_div_rem);
 
 logic [6:0] count;
@@ -32,13 +32,13 @@ begin
         begin
             count <= 64;
             A <= 0;
-            Q <= op1;
-            M <= op2;
+            Q <= inp1;
+            M <= inp2;
             ready <= 0;
         end
         if(count == 0)
         begin
-            ready <= 0;
+            ready <= 1;
             int_div_quo <= Q;
             int_div_rem <= A + M;
         end
@@ -65,7 +65,5 @@ begin
     else
         Q_wire[0] = 1;
 end
-
-assign valid = (|int_div_quo) | (|int_div_rem);
 
 endmodule
