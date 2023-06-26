@@ -18,7 +18,7 @@ begin
     case(select)
         `AUIPC: begin
             inp1 = op1;
-            inp2 = op2 << 12;
+            inp2 = {op2[19:0], 12'b0};
             result = cseladd_result; // op1 is pc, op2 is 20 bit immediate
         end
         `ADD: begin
@@ -41,7 +41,12 @@ begin
         `SLT:
         `SLTU:
         `XOR:
-        `SRL:
+        `SRL: begin
+            inp1 = op1;
+            inp2 = op2;
+            car = 0;
+            result = bs_result;
+        end
         `SRA:
         `OR:
         `AND:
