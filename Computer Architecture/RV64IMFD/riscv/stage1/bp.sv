@@ -1,131 +1,61 @@
+`define RET 32'h00008067
+
 module bp #(parameter N = 11)
-            (input logic [31:0] addr,
+            (input logic [63:0] addr,
             output logic hit, taken,
-            output logic [31:0] paddr,
+            output logic [63:0] paddr,
             input logic mispred,
-            input logic [31:0] t_addr,
-            input logic [31:0] tp_addr,
-            input clk, rst
+            input logic [63:0] t_addr,
+            input logic [63:0] tp_addr,
+            input logic clk, rst
 );
 
-logic [N-1:0] index_free, index, index_match;
-logic enc_valid, gfree;
-genvar j;
-logic present;
-logic [((2**N)-1):0] validn;
-logic [((2**N)-1):0] freen;
-logic [((2**N)-1):0] match;
-logic [N-1:0] gcounter;
+logic [63:0] ras [15:0];
 
 typedef struct {
     logic [31:0] address;
     logic [31:0] pred_address;
     logic [1:0] counter;
     logic [1:0] prev_counter;
-    logic valid;
     logic free;
 } btb_ele;
 
 btb_ele btb [((2**N)-1):0];
+logic [1:0] next_counter [((2**N)-1):0];
 
-// Prediction phase
-generate
-for(j = 0; j < 2**N; j++)
-begin : predictor
-    assign validn[j] =(btb[j].address == addr) ? 1 : 0;
-    assign freen[j] = btb[j].free;
-    assign btb[j].valid = (btb[j].address == addr) ? 1 : 0;
-end
-endgenerate
+logic [N-1:0] index_counter;
 
-enc_n #(N) u1(index, enc_valid, validn);
-assign index_free = gcounter;
-enc_n #(N) u3(index_match, present, match);
-
-assign paddr = btb[index].pred_address;
-assign taken = (btb[index].counter > 1) ? 1 : 0;
-assign hit = enc_valid;
-
-//misprediction phase
-generate
-for(j = 0; j < 2**N; j++)
-begin : matcher
-    assign match[j] = (btb[j].address == t_addr) ? 1 : 0;
-end
-endgenerate
+logic [3:0] ras_pointer;
+logic [3:0] next_ras_pointer;
+logic ras_empty;
+logic ras_full;
 
 always_ff @(posedge clk, negedge rst)
 begin
-    if (!rst)
-        gcounter <= 0;
-    else
-        if (mispred & gcounter != 2**N-1)
-            gcounter <= gcounter + 1;
-end
-
-assign gfree = 1;
-
-always_ff @(posedge clk, negedge rst)
-begin
-    if (!rst)
+    if(!rst)
     begin
+        ras_pointer <= 0;
+        index_counter <= 0;
         for(int i = 0; i < 2**N; i++)
         begin
             btb[i].address <= 0;
             btb[i].pred_address <= 0;
             btb[i].counter <= 0;
             btb[i].prev_counter <= 0;
-            btb[i].free <= 1;
+            btb[i].free <= 0;
         end
     end
     else
     begin
-        if (gfree & !present & mispred)
-        begin
-            btb[index_free].address <= t_addr;
-            btb[index_free].pred_address <= tp_addr;
-            btb[index_free].free <= 0;
-        end
-        if (hit)
-        begin
-            btb[index].prev_counter <= btb[index].counter;
-            if (btb[index].counter == 0)
-            begin
-                btb[index].counter <= 0;
-            end
-            else if (btb[index].counter == 1)
-            begin
-                btb[index].counter <= 0;
-            end
-            else if (btb[index].prev_counter == 2)
-            begin
-                btb[index].counter <= 3;
-            end
-            else
-            begin
-                btb[index].counter <= 3;
-            end
-        end
-        if (mispred & present)
-        begin
-            btb[index_match].prev_counter <= btb[index_match].counter;
-            if (btb[index_match].counter == 0)
-            begin
-                btb[index_match].counter <= 0;
-            end
-            else if (btb[index_match].counter == 1)
-            begin
-                btb[index_match].counter <= 0;
-            end
-            else if (btb[index_match].prev_counter == 2)
-            begin
-                btb[index_match].counter <= 3;
-            end
-            else
-            begin
-                btb[index_match].counter <= 3;
-            end
-        end
+
+    end
+end
+
+always_comb
+begin
+    if(instr == `RET)
+    begin
+        pred_address = ras[ras_pointer];
     end
 end
 
