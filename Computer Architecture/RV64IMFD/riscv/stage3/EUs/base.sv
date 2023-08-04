@@ -16,6 +16,8 @@ begin
     inp1 = 0;
     inp2 = 0;
     case(select)
+        `LUI: begin
+        end
         `AUIPC: begin
             inp1 = op1;
             inp2 = {op2[19:0], 12'b0};
