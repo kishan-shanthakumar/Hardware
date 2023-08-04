@@ -7,8 +7,8 @@ Decode: Fence.i flushes(to prevent additonal stalls)
 Execute: Misprediction results
 
 Registers
-1. Integer Registers
-2. Floating Point Registers
+1. Integer Registers = 32, 64 bit
+2. Floating Point Registers = 32, 64 bit
 
 EUs
 1. Adder/Subtractor
