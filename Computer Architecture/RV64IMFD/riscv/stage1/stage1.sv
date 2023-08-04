@@ -4,12 +4,12 @@
 // TODO: trap handling
 // TODO: interrupts
 
-module stage1 (input logic [31:0] t_addr, tp_addr,
+module stage1 (input logic [63:0] t_addr, tp_addr,
             input logic clk, rst, mispred, ready,
-            output logic [31:0] addr);
+            output logic [63:0] addr);
 
 logic hit, taken;
-logic [31:0] paddr;
+logic [63:0] paddr;
 
 bp #(11) u1(.*);
 
