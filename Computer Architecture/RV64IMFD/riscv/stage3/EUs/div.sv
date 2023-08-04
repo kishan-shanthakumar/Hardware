@@ -1,11 +1,11 @@
 `include "instr_op.sv"
 
 module div(input logic clk, rst,
-            input logic [31:0] op1, op2,
+            input logic [63:0] op1, op2,
             input logic [2:0] select,
             input logic start,
             output logic ready,
-            output logic [31:0] result);
+            output logic [63:0] result);
 
 int_div u1(.*);
 logic [63:0] inp1, inp2, int_div_quo, int_div_rem;

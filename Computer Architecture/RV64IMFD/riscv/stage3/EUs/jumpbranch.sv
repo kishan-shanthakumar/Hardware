@@ -2,10 +2,10 @@
 
 module jumpbranch(input logic [63:0] op1, op2,
                 input logic [2:0] select,
-                input logic [31:0] addr,
+                input logic [63:0] addr,
                 input logic [20:0] imm,
-                output logic [31:0] op_o,
-                output logic [31:0] final_pc);
+                output logic [63:0] op_o,
+                output logic [63:0] final_pc);
 
 logic g, gu, l, lu,e;
 assign gu = op1 > op2;
