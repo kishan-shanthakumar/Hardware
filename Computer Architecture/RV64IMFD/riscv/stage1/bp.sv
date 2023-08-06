@@ -1,4 +1,5 @@
 `define RET 32'h00008067
+`define JUM 32'h00000067
 
 module bp #(parameter N = 11)
             (input logic [63:0] addr,
@@ -7,6 +8,7 @@ module bp #(parameter N = 11)
             input logic mispred,
             input logic [63:0] t_addr,
             input logic [63:0] tp_addr,
+            input logic [31:0] instr,
             input logic clk, rst
 );
 
@@ -36,6 +38,8 @@ begin
     begin
         ras_pointer <= 0;
         index_counter <= 0;
+        ras_empty <= 1;
+        ras_full <= 0;
         for(int i = 0; i < 2**N; i++)
         begin
             btb[i].address <= 0;
@@ -47,16 +51,23 @@ begin
     end
     else
     begin
-
+        if(instr == `RET & ras_pointer == 0 & !ras_empty)
+        begin
+            ras_empty <= 1;
+        end
+        if(mispred)
     end
 end
 
 always_comb
 begin
-    if(instr == `RET)
+    pred_address = addr + 4;
+    if(instr == `RET & !ras_empty)
     begin
         pred_address = ras[ras_pointer];
+        next_ras_pointer = ras_pointer - 1;
     end
+
 end
 
 endmodule
