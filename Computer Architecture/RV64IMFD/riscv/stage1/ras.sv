@@ -2,14 +2,14 @@ module ras
 #(parameter ras_size = 8)
 (
     input logic clk, rst,
-    input logic [31:0] idata,
-    output logic [31:0] odata,
+    input logic [63:0] idata,
+    output logic [63:0] odata,
     input logic push, pop,
     output logic valid,
     output logic empty, full
 );
 
-logic [31:0] stack [N-1:0];
+logic [63:0] stack [N-1:0];
 
 logic [$clog2(N)-1:0] ras_addr;
 
@@ -25,6 +25,7 @@ begin
     begin
         if(push & !full)
         begin
+            empty <= 0;
             stack[ras_addr] <= idata;
             if(ras_addr != '1)
                 ras_addr <= ras_addr + 1;
@@ -33,7 +34,8 @@ begin
         end
         else if(pop & !empty)
         begin
-            if(ras_addr != 0)
+            full <= 0;
+            if(ras_addr != 0 | full != 1)
                 ras_addr <= ras_addr - 1;
             else
                 empty <= 1;
@@ -48,7 +50,7 @@ begin
     if(pop & !empty)
     begin
         valid = 1;
-        odata = stack[ras_addr];
+        odata = (ras_addr == 0 ! full == 1) ? stack[ras_addr] : stack[ras_addr-1];
     end
 end
 
