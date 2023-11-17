@@ -1,7 +1,8 @@
-module cseladd #(parameter N = 32)
-		(input logic [N-1:0] a,b,
-		input logic cin,
-		output logic [N:0] out);
+module cseladd #(parameter N = 32) (
+    input logic [N-1:0] a,b,
+	input logic cin,
+	output logic [N:0] out
+);
 
 logic [N-1:0] carry1;
 logic [N-1:0] sum1;

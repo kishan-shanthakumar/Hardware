@@ -1,7 +1,8 @@
-module enc_n #(parameter N = 3)
-					(output logic [N-1:0] out,
-					output logic valid,
-					input logic [2**N-1:0] inp);
+module enc_n #(parameter N = 3) (
+	output logic [N-1:0] out,
+	output logic valid,
+	input logic [2**N-1:0] inp
+);
 
 always_comb
 begin

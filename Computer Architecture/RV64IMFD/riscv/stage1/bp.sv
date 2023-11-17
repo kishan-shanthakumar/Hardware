@@ -1,17 +1,12 @@
-`define RET 32'h00008067
-`define JUM 32'h00000067
-
-module bp #(parameter bp_size = 11, parameter ras_size = 16)
-            (input logic [63:0] addr,
-            output logic hit, taken,
-            output logic [63:0] paddr,
-            input logic mispred,
-            input logic [63:0] t_addr,
-            input logic [63:0] tp_addr,
-            input logic [31:0] instr,
-            input logic clk, rst
+module bp (
+    input logic clk, n_reset,
+    input logic [47:0] pc,
+    input logic [31:0] instr,
+    input logic mispred,
+    input logic [47:0] correct_pc,
+    input logic [47:0] index_pc,
+    output logic [47:0] pred_pc,
+    output logic valid
 );
-logic [63:0] idata, odata;
-logic full, empty, push, pop, valid;
 
 endmodule

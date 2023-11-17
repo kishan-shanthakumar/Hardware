@@ -4,33 +4,13 @@
 // TODO: trap handling
 // TODO: interrupts
 
-module stage1 (input logic [63:0] t_addr, tp_addr,
-            input logic clk, rst, mispred, ready,
-            output logic [63:0] addr);
-
-logic hit, taken;
-logic [63:0] paddr;
-
-bp #(11) u1(.*);
-
-always_ff @(posedge clk, negedge rst)
-begin
-    if(!rst)
-        addr <= 0;
-    else
-        if (ready)
-        begin
-            if (mispred)
-                addr <= tp_addr;
-            else
-            begin
-                if (taken)
-                    addr <= paddr;
-                else
-                    addr <= addr + 4;
-            end
-        end 
-
-end
+module stage1 (
+    input logic clk, n_reset,
+    input logic mispred, ready,
+    input logic [47:0] correct_pc, index_pc,
+    input logic [31:0] instr,
+    output logic [47:0] pc,
+    output logic valid
+);
 
 endmodule
