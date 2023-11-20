@@ -4,7 +4,7 @@ module ras
     input logic clk, n_reset,
     input logic [47:0] idata,
     output logic [47:0] odata,
-    input logic push, pop, replace
+    input logic push, pop, replace, flush
 );
 
 logic [$clog2(ras_size)-1:0] ras_pointer;
@@ -14,6 +14,10 @@ logic [47:0] ret_addr_stack [ras_size-1:0];
 always_ff @( posedge clk, negedge n_reset )
 begin
     if(!n_reset)
+    begin
+        ras_pointer <= 0;
+    end
+    else if(flush)
     begin
         ras_pointer <= 0;
     end

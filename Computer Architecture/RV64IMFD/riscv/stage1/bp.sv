@@ -12,13 +12,14 @@
 
 module bp #(
     parameter bht_size = 256,
-    parameter num_occurences = 4
+    parameter num_occurences = 4,
+    parameter ras_size = 8
 )
 (
     input logic clk, n_reset,
     input logic [47:0] pc,
     input logic [31:0] instr,
-    input logic mispred,
+    input logic mispred, flush
     input logic [47:0] correct_pc,
     input logic [47:0] index_pc,
     output logic [47:0] pred_pc,
@@ -80,11 +81,11 @@ always_comb begin : RAS_action
     endcase
 end
 
-ras #(8)(
+ras #(ras_size)(
     .clk, .n_reset,
     .idata,
     .odata,
-    .push, .pop, .replace
+    .push, .pop, .replace, .flush
 );
 
 always_comb
