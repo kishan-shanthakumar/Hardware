@@ -19,7 +19,7 @@ module bp #(
     input logic clk, n_reset,
     input logic [47:0] pc,
     input logic [31:0] instr,
-    input logic mispred, flush
+    input logic mispred, flush,
     input logic [47:0] correct_pc,
     input logic [47:0] index_pc,
     output logic [47:0] pred_pc,
@@ -27,11 +27,11 @@ module bp #(
 );
 
 typedef struct packed {
-    logic [47:0] inp_pc,
-    logic [47:0] pred_pc,
-    logic [1:0] counter [num_occurences-1:0],
-    logic [$clog2(num_occurences)-1:0] counter_index,
-    logic valid
+    logic [47:0] inp_pc;
+    logic [47:0] pred_pc;
+    logic [1:0] counter [num_occurences-1:0];
+    logic [$clog2(num_occurences)-1:0] counter_index;
+    logic valid;
 } bht_t;
 
 bht_t bht [bht_size-1:0];
@@ -87,7 +87,7 @@ always_comb begin : RAS_action
     endcase
 end
 
-ras #(ras_size)(
+ras #(ras_size) u2 (
     .clk, .n_reset,
     .idata,
     .odata,
@@ -146,7 +146,7 @@ always_ff @( posedge clk, negedge n_reset ) begin : bht_logic
         if(mispred)
             if(match_valid)
             begin
-                bht[match_pointer].counter[counter_index-1] <= '{!bht[match_pointer].counter[counter_index][1], !bht[match_pointer].counter[counter_index][0]};
+                bht[match_pointer].counter[counter_index-1] <= {!bht[match_pointer].counter[counter_index-1][1], !bht[match_pointer].counter[counter_index-1][0]};
             end
             else
             begin
@@ -159,7 +159,7 @@ always_ff @( posedge clk, negedge n_reset ) begin : bht_logic
         else
         begin
             bht[match_pointer].counter_index <= bht[match_pointer].counter_index + 1;
-            bht[match_pointer].counter[counter_index] <= '{bht[match_pointer].counter[counter_index][1], !bht[match_pointer].counter[counter_index][0]};
+            bht[match_pointer].counter[counter_index] <= {bht[match_pointer].counter[counter_index][1], !bht[match_pointer].counter[counter_index][0]};
         end
     end
 end
