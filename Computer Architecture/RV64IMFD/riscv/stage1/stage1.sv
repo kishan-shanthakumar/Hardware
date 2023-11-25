@@ -13,4 +13,37 @@ module stage1 (
     output logic valid
 );
 
+logic [47:0] pred_pc;
+
+bp #(
+    parameter bht_size = 256,
+    parameter num_occurences = 4,
+    parameter ras_size = 8
+) u1
+(
+    .clk, .n_reset,
+    .pc,
+    .instr,
+    .mispred, .flush,
+    .correct_pc,
+    .index_pc,
+    .pred_pc,
+    .valid
+);
+
+always_ff @(posedge clk, negedge n_reset)
+begin
+    if (!n_reset)
+        pc <= '0;
+    else if (mispred)
+        pc <= correct_pc;
+    else if (ready)
+    begin
+        if(valid)
+            pc = pred_pc;
+        else
+            pc = pc + 4;
+    end
+end
+
 endmodule
