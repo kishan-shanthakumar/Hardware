@@ -29,10 +29,16 @@ module bp #(
 typedef struct packed {
     logic [47:0] inp_pc,
     logic [47:0] pred_pc,
-    logic [1:0] counter [3:0],
-    logic match,
+    logic [1:0] counter [num_occurences-1:0],
+    logic [$clog2(num_occurences)-1:0] counter_index,
     logic valid
-} bht;
+} bht_t;
+
+bht_t bht [bht_size-1:0];
+logic match [bht_size-1:0];
+logic [$clog2(bht_size)-1:0] match_pointer;
+logic match_valid;
+logic [$clog2(bht_size)-1:0] global_counter;
 
 logic push, pop, replace;
 logic [47:0] idata, odata;
@@ -66,11 +72,11 @@ always_comb begin : RAS_action
                             default: push = 1;
                         endcase
                     end
+                    default: begin
+                        if ( instr[19:15] == 5'h1 | instr[19:15] == 5'h5 )
+                            pop = 1;
+                    end
                 endcase
-            end
-            default: begin
-                if ( instr[19:15] == 5'h1 | instr[19:15] == 5'h5 )
-                    pop = 1;
             end
         end
         default: begin
@@ -89,9 +95,72 @@ ras #(ras_size)(
 );
 
 always_comb
-begin
+begin : pred_pc_assignment
     if (pop == 1)
         pred_pc = odata;
+    else if(valid)
+        pred_pc = bht[match_pointer].pred_pc;
+    else
+        pred_pc = pc + 4;
 end
 
+always_comb
+begin : matching_logic
+    if (mispred)
+    begin
+        for (int i = 0; i < bht_size; i++) begin
+            match[i] = (pc == bht[i].inp_pc);
+        end
+    end
+    else
+    begin
+        for (int i = 0; i < bht_size; i++) begin
+            match[i] = (index_pc == bht[i].inp_pc);
+        end
+    end
+end
+
+always_comb
+begin : valid_logic
+    if(match_valid)
+        valid = bht[match_pointer].valid;
+    else
+        valid = 0;
+end
+
+enc_n #($clog2(bht_size)) u1 (
+    .out(match_pointer), .valid(match_valid), .inp(match)
+);
+
+always_ff @( posedge clk, negedge n_reset ) begin : bht_logic
+    if (!n_reset)
+    begin
+        for (int i = 0; i < bht_size; i++) begin
+            bht[i].valid <= '0;
+            bht[i].counter_index <= '0;
+        end
+        global_counter <= '0;
+    end
+    else
+    begin
+        if(mispred)
+            if(match_valid)
+            begin
+                bht[match_pointer].counter[counter_index-1] <= '{!bht[match_pointer].counter[counter_index][1], !bht[match_pointer].counter[counter_index][0]};
+            end
+            else
+            begin
+                bht[global_counter].pc <= index_pc;
+                bht[global_counter].pred_pc <= correct_pc;
+                bht[global_counter].counter[0] <= 2;
+                bht[global_counter].counter_index <= 1;
+                bht[global_counter].valid <= '1;
+            end
+        else
+        begin
+            bht[match_pointer].counter_index <= bht[match_pointer].counter_index + 1;
+            bht[match_pointer].counter[counter_index] <= '{bht[match_pointer].counter[counter_index][1], !bht[match_pointer].counter[counter_index][0]};
+        end
+    end
+end
 endmodule
