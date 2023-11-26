@@ -1,10 +1,8 @@
-// Fence flush
-// BP for jump and branch
-// Send address and instruction to next stage
-// TODO: trap handling
-// TODO: interrupts
-
 module stage1 (
+    parameter bht_size = 256,
+    parameter num_occurences = 4,
+    parameter ras_size = 8
+) (
     input logic clk, n_reset,
     input logic mispred_ex, ready,
     input logic [47:0] correct_pc_ex, index_pc_ex,
@@ -16,9 +14,9 @@ module stage1 (
 logic [47:0] pred_pc;
 
 bp #(
-    parameter bht_size = 256,
-    parameter num_occurences = 4,
-    parameter ras_size = 8
+    .bht_size(bht_size),
+    .num_occurences(num_occurences),
+    .ras_size(ras_size)
 ) u1
 (
     .clk, .n_reset,
