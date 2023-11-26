@@ -18,7 +18,7 @@ always_ff @( posedge clk, negedge n_reset ) begin : ff_op
             reg_float[i] <= 0;
         end
     end
-    else if (we_rd_wb)
+    else if (we_rd_wb & (rd_wb != '0))
     begin
         if (reg_type_wb)
         begin
