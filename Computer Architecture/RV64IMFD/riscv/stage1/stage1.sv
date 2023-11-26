@@ -8,7 +8,8 @@ module stage1 (
     input logic [47:0] correct_pc_ex, index_pc_ex,
     input logic [31:0] instr,
     output logic [47:0] pc,
-    output logic valid
+    output logic valid,
+    output logic trap_if
 );
 
 logic [47:0] pred_pc;
@@ -33,15 +34,20 @@ always_ff @(posedge clk, negedge n_reset)
 begin
     if (!n_reset)
         pc <= '0;
-    else if (mispred_ex)
-        pc <= correct_pc_ex;
-    else if (ready)
+    else if (!trap_if)
     begin
-        if(valid)
-            pc = pred_pc;
-        else
-            pc = pc + 4;
+        if (mispred_ex)
+            pc <= correct_pc_ex;
+        else if (ready)
+        begin
+            if(valid)
+                pc = pred_pc;
+            else
+                pc = pc + 4;
+        end
     end
 end
+
+assign trap_if = pc[0] | pc[1];
 
 endmodule

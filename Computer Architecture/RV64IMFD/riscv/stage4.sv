@@ -12,7 +12,8 @@ module stage4(
     output logic [4:0] rd_mem,
     output logic [63:0] op_mem,
     output logic we_rd_mem,
-    output logic reg_type_mem
+    output logic reg_type_mem,
+    output logic trap_mem
 );
 
 endmodule
