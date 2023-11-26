@@ -6,8 +6,8 @@
 
 module stage1 (
     input logic clk, n_reset,
-    input logic mispred, ready,
-    input logic [47:0] correct_pc, index_pc,
+    input logic mispred_ex, ready,
+    input logic [47:0] correct_pc_ex, index_pc_ex,
     input logic [31:0] instr,
     output logic [47:0] pc,
     output logic valid
@@ -24,9 +24,9 @@ bp #(
     .clk, .n_reset,
     .pc,
     .instr,
-    .mispred, .flush,
-    .correct_pc,
-    .index_pc,
+    .mispred_ex, .flush,
+    .correct_pc_ex,
+    .index_pc_ex,
     .pred_pc,
     .valid
 );
@@ -35,8 +35,8 @@ always_ff @(posedge clk, negedge n_reset)
 begin
     if (!n_reset)
         pc <= '0;
-    else if (mispred)
-        pc <= correct_pc;
+    else if (mispred_ex)
+        pc <= correct_pc_ex;
     else if (ready)
     begin
         if(valid)

@@ -6,7 +6,8 @@ module stage5(
     input logic we_rd_mem,
     output logic [4:0] rd_wb,
     output logic [63:0] op_wb,
-    output logic we_rd_wb
+    output logic we_rd_wb,
+    output logic trap_wb
 );
 
 endmodule

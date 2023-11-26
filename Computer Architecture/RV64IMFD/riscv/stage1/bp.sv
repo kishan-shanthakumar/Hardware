@@ -19,9 +19,9 @@ module bp #(
     input logic clk, n_reset,
     input logic [47:0] pc,
     input logic [31:0] instr,
-    input logic mispred, flush,
-    input logic [47:0] correct_pc,
-    input logic [47:0] index_pc,
+    input logic mispred_ex, flush,
+    input logic [47:0] correct_pc_ex,
+    input logic [47:0] index_pc_ex,
     output logic [47:0] pred_pc,
     output logic valid
 );
@@ -106,7 +106,7 @@ end
 
 always_comb
 begin : matching_logic
-    if (mispred)
+    if (mispred_ex)
     begin
         for (int i = 0; i < bht_size; i++) begin
             match[i] = (pc == bht[i].inp_pc);
@@ -115,7 +115,7 @@ begin : matching_logic
     else
     begin
         for (int i = 0; i < bht_size; i++) begin
-            match[i] = (index_pc == bht[i].inp_pc);
+            match[i] = (index_pc_ex == bht[i].inp_pc);
         end
     end
 end
@@ -143,15 +143,15 @@ always_ff @( posedge clk, negedge n_reset ) begin : bht_logic
     end
     else
     begin
-        if(mispred)
+        if(mispred_ex)
             if(match_valid)
             begin
                 bht[match_pointer].counter[counter_index-1] <= {!bht[match_pointer].counter[counter_index-1][1], !bht[match_pointer].counter[counter_index-1][0]};
             end
             else
             begin
-                bht[global_counter].pc <= index_pc;
-                bht[global_counter].pred_pc <= correct_pc;
+                bht[global_counter].pc <= index_pc_ex;
+                bht[global_counter].pred_pc <= correct_pc_ex;
                 bht[global_counter].counter[0] <= 2;
                 bht[global_counter].counter_index <= 1;
                 bht[global_counter].valid <= '1;
