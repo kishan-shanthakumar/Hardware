@@ -1,7 +1,8 @@
 module stage1 (
     parameter bht_size = 256,
     parameter num_occurences = 4,
-    parameter ras_size = 8
+    parameter ras_size = 8,
+    parameter start_pc = '0
 ) (
     input logic clk, n_reset,
     input logic mispred_ex, ready,
@@ -33,7 +34,7 @@ bp #(
 always_ff @(posedge clk, negedge n_reset)
 begin
     if (!n_reset)
-        pc <= '0;
+        pc <= start_pc;
     else if (!trap_if)
     begin
         if (mispred_ex)

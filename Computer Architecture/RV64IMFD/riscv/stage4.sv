@@ -1,7 +1,7 @@
 module stage4(
     input logic clk, n_reset,
     input logic [47:0] mem_addr_ex,
-    input logic [] type_op_mem,
+    input logic [4:0] type_op_mem_ex,
     input logic we_rd_ex,
     input logic [63:0] op_ex,
     input logic [4:0] rd_ex,
