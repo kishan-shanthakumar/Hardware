@@ -2,7 +2,9 @@ module riscv (
     parameter bht_size = 256,
     parameter num_occurences = 4,
     parameter ras_size = 8,
-    parameter start_pc = '0
+    parameter start_pc = '0,
+    parameter mul_size = 8,
+	parameter use_dsp = 0
 ) (
     input logic clk, n_reset,
     input logic [31:0] instr,
