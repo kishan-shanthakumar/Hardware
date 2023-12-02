@@ -5,7 +5,9 @@ module stage2(
     output logic [4:0] type_op_mem_dec,
     output logic [3:0] op_funct_dec,
     output logic [4:0] rs1_dec, rs2_dec, rs3_dec, rd_dec,
-    output logic reg_type_dec
+    output logic reg_type_dec,
+    input logic trap_if,
+    output logic trap_if_dec, trap_dec
 );
 
 endmodule
