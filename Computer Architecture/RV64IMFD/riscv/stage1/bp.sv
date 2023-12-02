@@ -163,4 +163,19 @@ always_ff @( posedge clk, negedge n_reset ) begin : bht_logic
         end
     end
 end
+
+property check_ras_signals;
+    (!push || !pop || !replace);
+endproperty
+
+assert property(
+    (@ posedge clk) check_ras_signals);
+
+property check_ras_signals_with_instr;
+    (((instr[6:0] == JAL || instr[6:0] == JALR) & (instr[19:15] == 5'b1 || instr[19:15] == 5'b5 || instr[11:7] == 5'b5 || instr[11:7] == 5'b1)) |-> (!push || !pop || !replace));
+endproperty
+
+assert property(
+    (@ posedge clk) check_ras_signals_with_instr)
+
 endmodule
