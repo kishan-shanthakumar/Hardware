@@ -10,6 +10,7 @@ module int_mul #(
 
 logic [2*mul_size-1:0] partial_products [(int)(N/mul_size)][(int)(N/mul_size)];
 logic [2*N-1:0] product;
+logic [2*N-1:0] partial_products_wallace [N-1:0];
 
 genvar i,j;
 generate
@@ -22,6 +23,18 @@ generate
 	}
 endgenerate
 
-// add partial products in hierarchical fashion
+always_comb
+begin
+	for(int i = 0; i < (int)(N/mul_size); i++)
+	{
+		for(int j = 0; j < (int)(N/mul_size); j++)
+		{
+			partial_products_wallace[i][j*mul_size:+mul_size] = partial_products[i][j];
+		}
+	}
+end
+
+wallace_tree_addition #(64) u1(partial_products_wallace, product);
+assign {mulh, mul} = product;
 
 endmodule

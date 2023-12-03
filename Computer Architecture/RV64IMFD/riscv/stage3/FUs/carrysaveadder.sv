@@ -7,11 +7,12 @@ module carrysaveadder #(
 
 always_comb
 begin
-    for(int i = 0; i < N; i++)
+    for(int i = 0; i < N-1; i++)
     {
         sum[i] = a[i] ^ b[i] ^ c[i];
-        carry[i] = ((a[i] ^ b[i]) & c[i]) | (a[i] & b[i]);
+        carry[i+1] = ((a[i] ^ b[i]) & c[i]) | (a[i] & b[i]);
     }
+    sum[N-1] = a[N-1] ^ b[N-1] ^ c[N-1];
 end
 
 endmodule
