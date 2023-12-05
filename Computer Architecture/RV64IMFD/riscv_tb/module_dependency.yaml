@@ -13,16 +13,18 @@ top.sv:
         - int_div.sv
       fmul.sv:
         int_mul.sv:
+          wallace_tree_csa.sv:
+            - carrylookaheadadder.sv
           - carrysaveadder.sv
           - sub_mul.sv
-          - wallace_tree_csa.sv
       - fmadd.sv
     int_base.sv:
     int_mul_div.sv:
       int_mul.sv:
+        wallace_tree_csa.sv:
+          - carrylookaheadadder.sv
         - carrysaveadder.sv
         - sub_mul.sv
-        - wallace_tree_csa.sv
       - int_div.sv
   - regfile.sv
   - stage2.sv

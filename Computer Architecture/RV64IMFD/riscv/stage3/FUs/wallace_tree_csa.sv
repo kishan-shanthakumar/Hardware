@@ -14,16 +14,22 @@ generate
     step_values[0] = inps;
     for(int iter = 0; iter < iter_max; iter++)
     {
-        for(int i = 0; i < N; i += 3)
+        int c = 0;
+        for(int i = 0; i < (int)(N/$pow(1.5,iter)); i += 3)
         {
             index = i / 3;
-            carrysaveadder #(64) u1();
+            carrysaveadder #(64) u1(step_values[iter][i], step_values[iter][i], step_values[iter][i],
+                                    step_values[iter+1][c], step_values[iter+1][c+1]);
+            c += 2;
         }
-        for(int i = (int)(N/3); i < N; i++)
+        for(int i = (int)(N/$pow(1.5,iter)); i < N; i++)
         {
-            carry[i] = inps[i*3];
+            step_values[iter+1][c] = step_values[iter][i];
+            c++;
         }
     }
 endgenerate
+
+carrylookaheadadder #(64) u1(step_values[iter_max][0], step_values[iter_max][1], out);
 
 endmodule
