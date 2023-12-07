@@ -20,13 +20,13 @@ always_comb
 begin
 	temp_loop_product = '0;
 	for(int i = 0; i < mul_size; i++)
-	{
+	begin
 		for(int j = 0; j < mul_size; j++)
-		{
+		begin
 			iter_temp_product[j] = a[j]&b[i];
-		}
+		end
 		temp_loop_product = add(temp_loop_product, {iter_temp_product,{i{1'b0}}});
-	}
+	end
 	product = temp_loop_product;
 end
 

@@ -13,21 +13,21 @@ genvar i;
 generate
     step_values[0] = inps;
     for(int iter = 0; iter < iter_max; iter++)
-    {
+    begin
         int c = 0;
         for(int i = 0; i < (int)(N/$pow(1.5,iter)); i += 3)
-        {
+        begin
             index = i / 3;
             carrysaveadder #(64) u1(step_values[iter][i], step_values[iter][i], step_values[iter][i],
                                     step_values[iter+1][c], step_values[iter+1][c+1]);
             c += 2;
-        }
+        end
         for(int i = (int)(N/$pow(1.5,iter)); i < N; i++)
-        {
+        begin
             step_values[iter+1][c] = step_values[iter][i];
             c++;
-        }
-    }
+        end
+    end
 endgenerate
 
 carrylookaheadadder #(64) u1(step_values[iter_max][0], step_values[iter_max][1], out);
