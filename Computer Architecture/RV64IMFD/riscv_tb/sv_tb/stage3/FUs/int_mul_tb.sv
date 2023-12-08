@@ -5,9 +5,11 @@ rand bit [63:0] b_bit;
 
 endclass
 
-module carrylookaheadadder_tb();
+module int_mul_tb();
 
-parameter N = 74;
+parameter N = 64;
+parameter mul_size = 8;
+parameter use_dsp = 0;
 
 logic [N-1:0] a,b;
 logic [N-1:0] mul, mulh;
@@ -17,7 +19,7 @@ int check;
 logic [N-1:0] reala, realb;
 logic [2*N-1:0] sum;
 
-carrylookaheadadder #(N) u1(a,b,mul,mulh);
+int_mul #(N, mul_size, use_dsp) u1(a,b,mul,mulh);
 
 assign out = {mulh, mul};
 

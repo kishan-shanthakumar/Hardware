@@ -1,9 +1,3 @@
-function [127:0] add (input [127:0] inp1, input [127:0] inp2);
-    logic [127:0] cseladd_result;
-    cseladd #(128) u1(inp1, inp2, 0, cseladd_result);
-    add = cseladd_result;
-endfunction
-
 module sub_mul #(
 	parameter mul_size = 8,
 	parameter use_dsp = 0
@@ -12,23 +6,25 @@ module sub_mul #(
 	output logic [2*mul_size-1:0] out
 );
 
-logic [2*mul_size-1:0] temp_loop_product;
-logic [mul_size-1:0] iter_temp_product;
+logic [2*mul_size-1:0] temp_loop_product[mul_size:0];
+logic [2*mul_size-1:0] iter_temp_product[mul_size-1:0];
 logic [2*mul_size-1:0] product;
 
-always_comb
-begin
-	temp_loop_product = '0;
-	for(int i = 0; i < mul_size; i++)
+genvar i, j;
+generate
+	assign temp_loop_product[0] = '0;
+	for(i = 0; i < mul_size; i++)
 	begin
-		for(int j = 0; j < mul_size; j++)
+		for(j = 0; j < mul_size; j++)
 		begin
-			iter_temp_product[j] = a[j]&b[i];
+			assign iter_temp_product[i][j] = a[j]&b[i];
 		end
-		temp_loop_product = add(temp_loop_product, {iter_temp_product,{i{1'b0}}});
+		assign iter_temp_product[i][2*mul_size-1:mul_size] = '0;
+		cseladd #(2*mul_size) u1(temp_loop_product[i], (iter_temp_product[i]<<i), 0, temp_loop_product[i+1]);
 	end
-	product = temp_loop_product;
-end
+endgenerate
+
+assign product = temp_loop_product[mul_size];
 
 always_comb
 begin

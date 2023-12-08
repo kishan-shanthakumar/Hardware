@@ -1,35 +1,36 @@
 module wallace_tree_addition #(
+    parameter num_mul = 9,
     parameter N = 32
 ) (
-    input logic [2*N-1:0] inps [N-1:0],
-    output logic [2*N-1:0] out
+    input logic [N-1:0] inps [num_mul-1:0],
+    output logic [N-1:0] out
 );
 
-int iter_max = $clog2(N)/$clog2(1.5);
-logic [2*N-1:0] step_values [N-1:0][iter_max:0];
-int index;
+parameter real iter_max_real = $log10(num_mul)/($log10(3)-$log10(2));
+parameter int iter_max = iter_max_real;
 
-genvar i;
+logic [N-1:0] step_values [iter_max:0][num_mul-1:0];
+
+genvar i, j, iter, c;
 generate
-    step_values[0] = inps;
-    for(int iter = 0; iter < iter_max; iter++)
+    assign step_values[0] = inps;
+    for(iter = 0; iter < iter_max-1; iter++)
     begin
-        int c = 0;
-        for(int i = 0; i < (int)(N/$pow(1.5,iter)); i += 3)
+        for(i = 0; i < num_mul; i++)
         begin
-            index = i / 3;
-            carrysaveadder #(64) u1(step_values[iter][i], step_values[iter][i], step_values[iter][i],
-                                    step_values[iter+1][c], step_values[iter+1][c+1]);
-            c += 2;
+            assign step_values[iter+1][i] = '0;
         end
-        for(int i = (int)(N/$pow(1.5,iter)); i < N; i++)
+    end
+    for(iter = 0; iter < iter_max; iter++)
+    begin
+        for(i = 0; i <= num_mul-3; i += 3)
         begin
-            step_values[iter+1][c] = step_values[iter][i];
-            c++;
+            carrysaveadder #(N) u1(step_values[iter][i], step_values[iter][i+1], step_values[iter][i+2],
+                                    step_values[iter+1][((i*2)/3)+1], step_values[iter+1][(((i*2)/3))]);
         end
     end
 endgenerate
 
-carrylookaheadadder #(64) u1(step_values[iter_max][0], step_values[iter_max][1], out);
+carrylookaheadadder #(N) u1(step_values[iter_max][0], step_values[iter_max][1], out);
 
 endmodule

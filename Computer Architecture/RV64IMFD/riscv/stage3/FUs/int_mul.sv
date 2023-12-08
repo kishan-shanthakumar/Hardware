@@ -8,33 +8,43 @@ module int_mul #(
 	output logic [N-1:0] mulh
 );
 
-logic [2*mul_size-1:0] partial_products [(int)(N/mul_size)][(int)(N/mul_size)];
+
+parameter int num_mul = N/mul_size;
+parameter int tot = (num_mul * num_mul) / 3;
+parameter int num_pp = (tot + 1) * 3;
+
+logic [2*mul_size-1:0] partial_products [num_mul-1:0][num_mul-1:0];
 logic [2*N-1:0] product;
-logic [2*N-1:0] partial_products_wallace [N-1:0];
+logic [2*N-1:0] partial_products_wallace [num_pp-1:0];
 
 genvar i,j;
 generate
-	for(i = 0; i < (int)(N/mul_size); i++)
+	for(i = 0; i < num_mul; i++)
 	begin
-		for(j = 0; j < (int)(N/mul_size); j++)
+		for(j = 0; j < num_mul; j++)
 		begin
-			sub_mul #{mul_size, use_dsp} u1 {a[(i*mul_size)+:mul_size], b[(j*mul_size)+:mul_size], partial_products[i][j]};
+			sub_mul #(mul_size, use_dsp) u1 (a[(i*mul_size)+:mul_size], b[(j*mul_size)+:mul_size], partial_products[i][j]);
 		end
 	end
 endgenerate
 
-always_comb
-begin
-	for(int i = 0; i < (int)(N/mul_size); i++)
+genvar k,l,m;
+generate
+	for(k = 0; k < num_mul; k++)
 	begin
-		for(int j = 0; j < (int)(N/mul_size); j++)
+		for(l = 0; l < num_mul; l++)
 		begin
-			partial_products_wallace[i][j*mul_size:+mul_size] = partial_products[i][j];
+			assign partial_products_wallace[(num_mul*k)+l] = '0;
+			assign partial_products_wallace[(num_mul*k)+l][((k+l)*mul_size)+:(2*mul_size)] = partial_products[k][l];
 		end
 	end
-end
+	for(m = tot*3; m < num_pp; m++)
+	begin
+		assign partial_products_wallace[m] = '0;
+	end
+endgenerate
 
-wallace_tree_addition #(64) u1(partial_products_wallace, product);
+wallace_tree_addition #((num_pp),2*N) u1(partial_products_wallace, product);
 assign {mulh, mul} = product;
 
 endmodule
