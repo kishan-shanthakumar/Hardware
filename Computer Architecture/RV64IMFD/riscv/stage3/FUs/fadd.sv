@@ -47,19 +47,27 @@ always_comb
 begin
     if (a[exp:man+1] == b[exp:man+1])
     begin
-        ff1a = {a[N-1:man+1], 1'b1, a[man:0]};
-        ff1b = {b[N-1:man+1], 1'b1, b[man:0]};
+        if(a[man:0] > b[man:0])
+        begin
+            ff1a = {a[N-1:man+1], 1'b1, a[man:0]};
+            ff1b = {a[N-1], b[exp:man+1], {{1'b1, b[man:0]} ^ {(man+1){sub}}}};
+        end
+        else
+        begin
+            ff1a = {b[N-1:man+1], 1'b1, b[man:0]};
+            ff1b = {b[N-1], a[exp:man+1], {{1'b1, a[man:0]} ^ {(man+1){sub}}}};
+        end
     end
     else if ($signed(a[exp:man+1]-(2**(exp_len-1)-1)) > $signed(b[exp:man+1]-(2**(exp_len-1)-1)))
     begin
         ff1a = {a[N-1:man+1], 1'b1, a[man:0]};
-        ff1b[N:man+1] = {a[N-1], b[exp:man+1], 1'b0};
-        ff1b[man:0] = {{1'b1, b[man:0]} >> shft_amtab} ^ {man{sub}};
+        ff1b[N:man+2] = {a[N-1], b[exp:man+1]};
+        ff1b[man+1:0] = {{1'b1, b[man:0]} >> shft_amtab} ^ {(man+1){sub}};
     end
     else
     begin
-        ff1b[N:man+1] = {b[N-1], a[exp:man+1], 1'b0};
-        ff1b[man:0] = {{1'b1, a[man:0]} >> shft_amtba} ^ {man{sub}};
+        ff1b[N:man+2] = {b[N-1], a[exp:man+1]};
+        ff1b[man+1:0] = {{1'b1, a[man:0]} >> shft_amtba} ^ {(man+1){sub}};
         ff1a = {b[N-1:man+1], 1'b1, b[man:0]};
     end
     ff2[man+2:0] = ff2_ans;
