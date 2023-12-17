@@ -13,7 +13,9 @@ module stage3(
     output logic mispred_ex,
     output logic [47:0] correct_pc_ex, index_pc_ex,
     input logic [4:0] type_op_mem_dec,
-    output logic [4:0] type_op_mem_ex
+    output logic [4:0] type_op_mem_ex,
+    input logic trap_if_dec, trap_dec,
+    output logic trap_if_dec_ex, trap_dec_ex, trap_ex
 );
 
 endmodule

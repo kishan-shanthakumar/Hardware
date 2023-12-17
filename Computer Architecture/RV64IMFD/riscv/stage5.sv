@@ -7,6 +7,7 @@ module stage5(
     output logic [4:0] rd_wb,
     output logic [63:0] op_wb,
     output logic we_rd_wb,
+    input logic trap_if_dec_ex_mem, trap_dec_ex_mem, trap_ex_mem, trap_mem,
     output logic trap_wb
 );
 
