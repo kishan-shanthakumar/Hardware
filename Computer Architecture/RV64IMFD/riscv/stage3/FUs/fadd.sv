@@ -9,6 +9,11 @@
 // 011 -> RUP Round Up
 // 100 -> RMM Round to Nearest, ties to Max Magnitude
 
+// of -> overflow
+// uf -> underflow
+// nx -> inexact
+// inv -> invalid
+
 'define snan 32'h7fa00000
 'define qnan 32'h7fc00000
 
@@ -19,7 +24,8 @@ module fadd #(
     input logic [N-1:0] a, b,
     input logic [2:0] frm,
     input logic valid,
-    output logic [N-1:0] out
+    output logic [N-1:0] out.
+    output logic of, uf, nx, inv
 );
 
 `ifdef N == 64
@@ -41,6 +47,7 @@ logic [N+1:0] ff2, ff2_pipe;
 logic [man+2:0] ff2_ans;
 logic [man:0] ff3_man;
 logic [N-1:0] ff3, ff3_pipe;
+logic [2:0] frm_d1, frm_d2;
 
 cseladd #(exp_len) u1(a[exp:man+1],~b[exp:man+1],1,shft_amtab);
 cseladd #(exp_len) u2(b[exp:man+1],~a[exp:man+1],1,shft_amtba);
@@ -96,7 +103,13 @@ begin
         begin
             ff3[exp:man+1] = ff2[N+1:man+3]-1;
             ff3[man:1] = ff2[man+1:2];
-            ff3[0] = //TODO rounding
+            case(frm_d2)
+            3'b000 ff3[0] = ; break
+            3'b001 ff3[0] = ; break
+            3'b010 ff3[0] = ; break
+            3'b011 ff3[0] = ; break
+            3'b100 ff3[0] = ; break
+            endcase
         end
     end
     else if(ff2[man+1] == 1'b1)
@@ -111,15 +124,18 @@ begin
             ff3 = '0;
         end
     end
+    out = ff3;
 end
 
 `ifdef pipe
-always_ff @(posedge clk, negedge rst)
+always_ff @(posedge clk)
 begin
     ff1a_pipe <= ff1a;
     ff1b_pipe <= ff1b;
     ff2_pipe <= ff2;
     ff3_pipe <= ff3;
+    frm_d1 <= frm;
+    frm_d2 <= frm_d1;
 end
 `endif
 
@@ -130,6 +146,8 @@ begin
     ff1b_pipe = ff1b;
     ff2_pipe = ff2;
     ff3_pipe = ff3;
+    frm_d1 = frm;
+    frm_d2 = frm_d1;
 end
 `endif
 
