@@ -9,6 +9,9 @@
 // 011 -> RUP Round Up
 // 100 -> RMM Round to Nearest, ties to Max Magnitude
 
+'define snan 32'h7fa00000
+'define qnan 32'h7fc00000
+
 module fadd #(
     parameter N = 32,
     parameter pipe = 1
@@ -32,14 +35,16 @@ module fadd #(
 `endif
 
 logic [exp_len-1:0] shft_amtab, shft_amtba;
-logic [N:0] ff1a, ff1b;
+logic [N:0] ff1a, ff1b, ff1a_pipe, ff1b_pipe;
 logic sub;
-logic [N+1:0] ff2;
+logic [N+1:0] ff2, ff2_pipe;
 logic [man+2:0] ff2_ans;
+logic [man:0] ff3_man;
+logic [N-1:0] ff3, ff3_pipe;
 
 cseladd #(exp_len) u1(a[exp:man+1],~b[exp:man+1],1,shft_amtab);
 cseladd #(exp_len) u2(b[exp:man+1],~a[exp:man+1],1,shft_amtba);
-cseladd #(man+2) u3(ff1a[man+1:0], ff1b[man+1:0], sub, ff2[man+2:0]);
+cseladd #(man+2) u3(ff1a_pipe[man+1:0], ff1b_pipe[man+1:0], sub, ff2[man+2:0]);
 
 assign sub = a[N-1] ^ b[N-1];
 
@@ -70,8 +75,63 @@ begin
         ff1b[man+1:0] = {{1'b1, a[man:0]} >> shft_amtba} ^ {(man+1){sub}};
         ff1a = {b[N-1:man+1], 1'b1, b[man:0]};
     end
-    ff2[man+2:0] = ff2_ans;
-    ff2[N-1:man+3] = ff1a[N-1:man+2];
+    if ((ff1a[exp:0] == ff1b[exp:0]) && (ff1a[N-1] != ff1b[N-1]))
+    begin
+        ff2 = '0;
+    end
+    else
+    begin
+        ff2[man+2:0] = ff2_ans;
+        ff2[N+1:man+3] = ff1a[N:man+2];
+    end
+    ff3[N-1] = ff2[N-1];
+    if(ff2[man+2] == 1'b1)
+    begin
+        if(ff2[N+1:man+3] == 8'b254)
+        begin
+            ff3[exp:man+1] = '1;
+            ff3[man:0] = '0;
+        end
+        else
+        begin
+            ff3[exp:man+1] = ff2[N+1:man+3]-1;
+            ff3[man:1] = ff2[man+1:2];
+            ff3[0] = //TODO rounding
+        end
+    end
+    else if(ff2[man+1] == 1'b1)
+    begin
+        ff3[exp:man+1] = ff2[N+1:man+3];
+        ff3[man:0] = ff2[man:0];
+    end
+    else
+    begin
+        if ((ff2[N+1:man+3] == 8'b1) && (ff3[man:-2] == 2'b0) | (ff2 == '0))
+        begin
+            ff3 = '0;
+        end
+    end
 end
+
+`ifdef pipe
+always_ff @(posedge clk, negedge rst)
+begin
+    ff1a_pipe <= ff1a;
+    ff1b_pipe <= ff1b;
+    ff2_pipe <= ff2;
+    ff3_pipe <= ff3;
+end
+`endif
+
+`ifndef pipe
+always_comb
+begin
+    ff1a_pipe = ff1a;
+    ff1b_pipe = ff1b;
+    ff2_pipe = ff2;
+    ff3_pipe = ff3;
+end
+`endif
+
 
 endmodule
