@@ -4,7 +4,7 @@ module regfile (
     input logic reg_type_dec, reg_type_wb,
     input logic [63:0] op_wb,
     input logic we_rd_wb,
-    output logic [63:0] op1_dec, op2_dec, op3_dec
+    output logic [63:0] op1_reg, op2_reg, op3_reg
 );
 
 logic [63:0] reg_int [31:0];
@@ -34,15 +34,15 @@ end
 always_comb begin : regfile_op_logic
     if (reg_type_dec)
     begin
-        op1_dec = reg_float[rs1_dec];
-        op2_dec = reg_float[rs2_dec];
-        op3_dec = reg_float[rs3_dec];
+        op1_reg = reg_float[rs1_dec];
+        op2_reg = reg_float[rs2_dec];
+        op3_reg = reg_float[rs3_dec];
     end
     else
     begin
-        op1_dec = reg_int[rs1_dec];
-        op2_dec = reg_int[rs2_dec];
-        op3_dec = reg_int[rs3_dec];
+        op1_reg = reg_int[rs1_dec];
+        op2_reg = reg_int[rs2_dec];
+        op3_reg = reg_int[rs3_dec];
     end
 end
 
