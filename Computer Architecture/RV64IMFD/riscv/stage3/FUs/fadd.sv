@@ -25,7 +25,7 @@ module fadd #(
     input logic [2:0] frm,
     input logic valid,
     output logic [N-1:0] out.
-    output logic of, uf, nx, inv
+    output logic of, uf, nx, inv, ready
 );
 
 `ifdef N == 64
@@ -48,6 +48,7 @@ logic [man+2:0] ff2_ans;
 logic [man:0] ff3_man;
 logic [N-1:0] ff3, ff3_pipe;
 logic [2:0] frm_d1, frm_d2;
+logic valid_d1, valid_d2;
 
 cseladd #(exp_len) u1(a[exp:man+1],~b[exp:man+1],1,shft_amtab);
 cseladd #(exp_len) u2(b[exp:man+1],~a[exp:man+1],1,shft_amtba);
@@ -82,49 +83,56 @@ begin
         ff1b[man+1:0] = {{1'b1, a[man:0]} >> shft_amtba} ^ {(man+1){sub}};
         ff1a = {b[N-1:man+1], 1'b1, b[man:0]};
     end
-    if ((ff1a[exp:0] == ff1b[exp:0]) && (ff1a[N-1] != ff1b[N-1]))
+    if ((ff1a_pipe[exp:0] == ff1b_pipe[exp:0]) && (ff1a_pipe[N-1] != ff1b_pipe[N-1]))
     begin
-        ff2 = '0;
+        ff2 = {ff1a_pipe[N-1],{(N-1){1'b0}}};
     end
     else
     begin
         ff2[man+2:0] = ff2_ans;
         ff2[N+1:man+3] = ff1a[N:man+2];
     end
-    ff3[N-1] = ff2[N-1];
-    if(ff2[man+2] == 1'b1)
+    ff3[N-1] = ff2_pipe[N-1];
+    if(ff2_pipe[man+2] == 1'b1)
     begin
-        if(ff2[N+1:man+3] == 8'b254)
+        if(ff2_pipe[N+1:man+3] == 8'b254)
         begin
             ff3[exp:man+1] = '1;
             ff3[man:0] = '0;
         end
         else
         begin
-            ff3[exp:man+1] = ff2[N+1:man+3]-1;
-            ff3[man:1] = ff2[man+1:2];
-            case(frm_d2)
-            3'b000 ff3[0] = ; break
-            3'b001 ff3[0] = ; break
-            3'b010 ff3[0] = ; break
-            3'b011 ff3[0] = ; break
-            3'b100 ff3[0] = ; break
-            endcase
+            ff3[exp:man+1] = ff2_pipe[N+1:man+3]-1;
+            ff3[man:1] = ff2_pipe[man+1:2];
+            ff3[0] = ff2_pipe[1];
+            // case(frm_d2)
+            // 3'b000 ff3[0] = ; break
+            // 3'b001 ff3[0] = ; break
+            // 3'b010 ff3[0] = ; break
+            // 3'b011 ff3[0] = ; break
+            // 3'b100 ff3[0] = ; break
+            // endcase
         end
     end
     else if(ff2[man+1] == 1'b1)
     begin
-        ff3[exp:man+1] = ff2[N+1:man+3];
-        ff3[man:0] = ff2[man:0];
+        ff3[exp:man+1] = ff2_pipe[N+1:man+3];
+        ff3[man:0] = ff2_pipe[man:0];
     end
     else
     begin
-        if ((ff2[N+1:man+3] == 8'b1) && (ff3[man:-2] == 2'b0) | (ff2 == '0))
-        begin
-            ff3 = '0;
+        ff3[exp:man+1] = ff2_pipe[N+1:man+3];
+        ff3[man:0] = ff2_pipe[man:0];
+        for (int i = 0 ; i < man; i++) begin
+            ff3[man:0] = ff3[man:0]<<1;
+            ff3[exp:man] -= 1;
+            if(ff3[man] == 1'b1 )
+                break;
         end
+        if (ff3[man:0] < 1'b1)
+            ff3 = '0;
     end
-    out = ff3;
+    out = ff3_pipe;
 end
 
 `ifdef pipe
@@ -136,6 +144,9 @@ begin
     ff3_pipe <= ff3;
     frm_d1 <= frm;
     frm_d2 <= frm_d1;
+    valid_d1 <= valid;
+    valid_d2 <= valid_d1;
+    ready <= valid_d2;
 end
 `endif
 
@@ -148,6 +159,9 @@ begin
     ff3_pipe = ff3;
     frm_d1 = frm;
     frm_d2 = frm_d1;
+    valid_d1 = valid;
+    valid_d2 = valid_d1;
+    ready = valid_d2;
 end
 `endif
 
